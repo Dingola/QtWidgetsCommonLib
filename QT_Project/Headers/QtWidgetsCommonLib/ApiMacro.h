@@ -1,0 +1,9 @@
+#ifdef QTWIDGETSCOMMONLIB_USE_DLL
+#ifdef QTWIDGETSCOMMONLIB_BUILDING_PROJECT
+#define QTWIDGETSCOMMONLIB_API __declspec(dllexport)
+#else
+#define QTWIDGETSCOMMONLIB_API __declspec(dllimport)
+#endif
+#else
+#define QTWIDGETSCOMMONLIB_API
+#endif
