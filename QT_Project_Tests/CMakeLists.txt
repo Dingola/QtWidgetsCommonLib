@@ -52,19 +52,7 @@ include_directories(Headers Sources)
 ### Qt6 Configuration                    ###
 ############################################
 
-if ("$ENV{QT6_DIR}" STREQUAL "")
-	set(QT6_DIR "E:\\Qt\\6.8.0\\msvc2022_64\\")
-else()
-	set(QT6_DIR "$ENV{QT6_DIR}")
-endif()
-
-if (EXISTS ${QT6_DIR})
-	set(CMAKE_PREFIX_PATH ${QT6_DIR})
-else()
-	message(WARNING "The specified qt6 path '${QT6_DIR}' does not exist")
-endif()
-
-find_package(Qt6 REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Test LinguistTools)
 qt_standard_project_setup()
 #qt6_add_resources(RSCS resources.qrc)
 #add_custom_target(gen_qrc DEPENDS ${RSCS})
@@ -158,7 +146,7 @@ message(STATUS "###############################################################"
 
 add_executable(${PROJECT_NAME})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Test)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/GoogleTest.cmake)
 
