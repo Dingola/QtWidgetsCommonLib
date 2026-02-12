@@ -5,6 +5,8 @@
 
 #include <QApplication>
 
+ // GCOVR_EXCL_START  LCOV_EXCL_START
+
 /**
  * @brief The main function initializes the Qt application and executes the application event loop.
  *
@@ -30,3 +32,5 @@ auto main(int argc, char* argv[]) -> int
 
     return app.exec();
 }
+
+// GCOVR_EXCL_STOP   LCOV_EXCL_STOP
