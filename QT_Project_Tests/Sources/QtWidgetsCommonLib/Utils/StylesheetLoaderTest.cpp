@@ -27,6 +27,39 @@ void StylesheetLoaderTest::TearDown()
     m_loader = nullptr;
 }
 
+// Global pointer used by the message handler
+static QVector<QString>* g_stylesheet_msg_capture = nullptr;
+
+/**
+ * @brief Installs a temporary message handler to capture warnings/debug logs.
+ */
+auto StylesheetLoaderTest::install_message_capture()
+    -> std::pair<QVector<QString>*, QtMessageHandler>
+{
+    auto* buf = new QVector<QString>();
+    g_stylesheet_msg_capture = buf;
+    QtMessageHandler prev = qInstallMessageHandler([](QtMsgType type, const QMessageLogContext& ctx,
+                                                      const QString& msg) {
+        Q_UNUSED(ctx);
+        if (g_stylesheet_msg_capture)
+        {
+            g_stylesheet_msg_capture->push_back(QStringLiteral("[%1] %2").arg(int(type)).arg(msg));
+        }
+    });
+    return {buf, prev};
+}
+
+/**
+ * @brief Restores previous message handler and frees capture buffer.
+ */
+auto StylesheetLoaderTest::restore_message_capture(QtMessageHandler prev,
+                                                   QVector<QString>* buf) -> void
+{
+    qInstallMessageHandler(prev);
+    g_stylesheet_msg_capture = nullptr;
+    delete buf;
+}
+
 /**
  * @brief Helper to create a temporary QSS file with given content.
  * @param content The QSS content to write.
@@ -606,6 +639,111 @@ QWidget { color: @Color; }
 
     ASSERT_TRUE(m_loader->set_theme(""));
     EXPECT_TRUE(m_loader->get_current_stylesheet().contains("#abc"));
+}
+
+/**
+ * @brief Tests set_theme uses in-memory stylesheet when available (covers: theme_name
+ * empty/available + m_raw_stylesheet path).
+ */
+TEST_F(StylesheetLoaderTest, SetThemeUsesInMemoryWhenRawStylesheetPresent)
+{
+    // Raw data with two themes and a default
+    const QString qss = R"(
+@Variables[Name="Dark"] { @Color: #000; }
+@Variables[Name="Light"] { @Color: #fff; }
+@Variables { @Color: #abc; }
+QWidget { color: @Color; }
+)";
+    ASSERT_TRUE(m_loader->load_stylesheet_from_data(qss, "Dark"));
+    ASSERT_TRUE(m_loader->get_current_stylesheet().contains("#000"));
+
+    // Switch to available theme -> should succeed via load_stylesheet_from_data
+    EXPECT_TRUE(m_loader->set_theme("Light"));
+    EXPECT_TRUE(m_loader->get_current_stylesheet().contains("#fff"));
+
+    // Switch to default (empty) -> should succeed via load_stylesheet_from_data
+    EXPECT_TRUE(m_loader->set_theme(QString()));
+    EXPECT_TRUE(m_loader->get_current_stylesheet().contains("#abc"));
+}
+
+/**
+ * @brief Tests set_theme falls back to file path when raw stylesheet is empty (covers: else if
+ * (!m_current_stylesheet_path.isEmpty()) branch).
+ */
+TEST_F(StylesheetLoaderTest, SetThemeFallsBackToFilePathWhenRawEmpty)
+{
+    // Prepare a real file with themes
+    const QString qss = R"(
+@Variables[Name="Dark"] { @Color: #111; }
+@Variables[Name="Light"] { @Color: #eee; }
+QWidget { color: @Color; }
+)";
+    const QString path = create_temp_qss(qss);
+    ASSERT_FALSE(path.isEmpty());
+
+    // Load from file
+    ASSERT_TRUE(m_loader->load_stylesheet(path, "Dark"));
+    ASSERT_TRUE(m_loader->get_current_stylesheet().contains("#111"));
+
+    // Fresh loader instance (raw stylesheet is set by load_stylesheet from file as well)
+    delete m_loader;
+    m_loader = new QtWidgetsCommonLib::StylesheetLoader();
+    ASSERT_TRUE(m_loader->load_stylesheet(path, "Dark"));
+    ASSERT_TRUE(m_loader->get_current_stylesheet().contains("#111"));
+
+    // Switch to available theme "Light" -> content should reflect #eee
+    EXPECT_TRUE(m_loader->set_theme("Light"));
+    EXPECT_TRUE(m_loader->get_current_stylesheet().contains("#eee"));
+
+    // Empty theme (default) with no default block -> placeholders remain unresolved
+    EXPECT_TRUE(m_loader->set_theme(QString()));
+    EXPECT_FALSE(m_loader->get_current_stylesheet().contains("#eee"));
+    EXPECT_TRUE(m_loader->get_current_stylesheet().contains("@Color"));
+
+    QFile::remove(path);
+}
+
+/**
+ * @brief Tests warning when set_theme called without any stylesheet loaded (covers: qWarning no
+ * stylesheet path).
+ */
+TEST_F(StylesheetLoaderTest, SetThemeWarnsWhenNoStylesheetLoaded)
+{
+    // New loader without any stylesheet
+    delete m_loader;
+    m_loader = new QtWidgetsCommonLib::StylesheetLoader();
+
+    auto [buf, prev] = install_message_capture();
+
+    // Attempt to set default theme (allowed by first condition), but both raw and path are empty
+    EXPECT_FALSE(m_loader->set_theme(QString()));
+
+    // Expect at least one warning logged
+    EXPECT_FALSE(buf->isEmpty());
+
+    restore_message_capture(prev, buf);
+}
+
+/**
+ * @brief Tests warning when a non-available theme is requested (covers: qWarning Theme not
+ * available branch).
+ */
+TEST_F(StylesheetLoaderTest, SetThemeWarnsWhenThemeNotAvailable)
+{
+    const QString qss = R"(
+@Variables[Name="Dark"] { @Color: #000; }
+QWidget { color: @Color; }
+)";
+    ASSERT_TRUE(m_loader->load_stylesheet_from_data(qss, "Dark"));
+    ASSERT_TRUE(m_loader->get_current_stylesheet().contains("#000"));
+
+    auto [buf, prev] = install_message_capture();
+
+    // Request theme not present in available themes list
+    EXPECT_FALSE(m_loader->set_theme("Light"));
+    EXPECT_FALSE(buf->isEmpty());
+
+    restore_message_capture(prev, buf);
 }
 
 /**

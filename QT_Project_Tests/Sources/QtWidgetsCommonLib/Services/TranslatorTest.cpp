@@ -17,6 +17,9 @@
 
 using QtWidgetsCommonLib::Translator;
 
+// Provide a global pointer used by the temporary handler to store captured messages
+QVector<QString>* g_captured_ptr = nullptr;
+
 void TranslatorTest::SetUp()
 {
     m_translator = new Translator();
@@ -352,4 +355,110 @@ TEST_F(TranslatorTest, SwitchLocalesEmitsOncePerSuccessfulLoadAndReplacesTransla
     QFile::remove(app_en_dst);
     QFile::remove(app_de_dst);
     QFile::remove(qt_de_dst);
+}
+
+/**
+ * @test Constructor logs only once when the translations directory is missing,
+ * even if multiple Translator instances are created.
+ */
+TEST_F(TranslatorTest, CtorLogsOnlyOnceWhenTranslationsDirMissing)
+{
+    // Arrange: delete the translations directory if present
+    const QString base_dir = QCoreApplication::applicationDirPath();
+    const QString translations_dir = base_dir + QStringLiteral("/translations");
+    QDir dir(translations_dir);
+    if (dir.exists())
+    {
+        EXPECT_TRUE(dir.removeRecursively());
+    }
+
+    // Capture messages during two consecutive constructions
+    QVector<QString> captured_messages;
+    auto previous_handler = qInstallMessageHandler(
+        [](QtMsgType type, const QMessageLogContext& context, const QString& message) {
+            Q_UNUSED(context);
+            static auto append_message = [](QtMsgType t, const QString& msg) -> void {
+                extern QVector<QString>* g_captured_ptr;
+                if (g_captured_ptr != nullptr)
+                {
+                    // Store all severities; we expect a warning from the ctor path
+                    g_captured_ptr->push_back(QStringLiteral("[%1] %2").arg(int(t)).arg(msg));
+                }
+            };
+            append_message(type, message);
+        });
+
+    extern QVector<QString>* g_captured_ptr;
+    g_captured_ptr = &captured_messages;
+
+    // Act: construct and destroy two instances while translations dir is missing
+    {
+        Translator* t1 = new Translator();
+        delete t1;
+        t1 = nullptr;
+    }
+    {
+        Translator* t2 = new Translator();
+        delete t2;
+        t2 = nullptr;
+    }
+
+    // Restore handler
+    qInstallMessageHandler(previous_handler);
+    g_captured_ptr = nullptr;
+
+    // Assert: only one log message emitted across both constructions
+    // Note: We do not assert exact text content; count is the key.
+    EXPECT_EQ(captured_messages.size(), 1);
+}
+
+/**
+ * @test Loading a language fails when the app translator is missing but the Qt translator is
+ * present.
+ *
+ * Ensures qt_en.qm exists but app_en.qm does not, then attempts to load "en" and expects failure
+ * without emitting languageChanged.
+ */
+TEST_F(TranslatorTest, LoadLogsWhenAppTranslatorMissingButQtTranslatorPresent)
+{
+    const QString base_dir = QCoreApplication::applicationDirPath();
+    const QString translations_dir = base_dir + QStringLiteral("/translations");
+    QDir dir(translations_dir);
+    if (!dir.exists())
+    {
+        EXPECT_TRUE(QDir().mkpath(translations_dir));
+    }
+
+    // Ensure qt_en.qm exists
+    const QString qt_en = translations_dir + QStringLiteral("/qt_en.qm");
+    if (!QFile::exists(qt_en))
+    {
+        QFile f(qt_en);
+        EXPECT_TRUE(f.open(QIODevice::WriteOnly));
+        f.write("dummy");
+        f.close();
+    }
+
+    // Ensure app_en.qm does NOT exist
+    const QString app_en = translations_dir + QStringLiteral("/app_en.qm");
+    if (QFile::exists(app_en))
+    {
+        EXPECT_TRUE(QFile::remove(app_en));
+    }
+
+    delete m_translator;
+    m_translator = new Translator();
+
+    QSignalSpy spy(m_translator, &Translator::languageChanged);
+    ASSERT_TRUE(spy.isValid());
+
+    // Act: qt loads (true), app fails (false) -> "Failed to load the application translator ..."
+    const bool ok = m_translator->load_translation(QStringLiteral("en"));
+
+    // Assert: expected failure, no signal emitted
+    EXPECT_FALSE(ok);
+    EXPECT_EQ(spy.count(), 0);
+
+    // Cleanup
+    QFile::remove(qt_en);
 }

@@ -27,7 +27,13 @@ Translator::Translator(QObject* parent)
 
     if (!translations_dir.exists())
     {
-        qDebug() << "The translation folder does not exist: " << m_translations_path;
+        static bool logged_once = false;
+        if (!logged_once)
+        {
+            qWarning() << "Translations folder missing at" << m_translations_path
+                << "- no translations will be available.";
+            logged_once = true;
+        }
     }
 }
 
