@@ -31,7 +31,7 @@ Translator::Translator(QObject* parent)
         if (!logged_once)
         {
             qWarning() << "Translations folder missing at" << m_translations_path
-                << "- no translations will be available.";
+                       << "- no translations will be available.";
             logged_once = true;
         }
     }
