@@ -64,7 +64,7 @@ include_directories(Headers Sources)
 ### Qt6 Configuration                    ###
 ############################################
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Widgets LinguistTools Svg)
 qt_standard_project_setup()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC OFF)
@@ -215,7 +215,7 @@ else()
 	message(FATAL_ERROR "Build type not specified")
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Svg)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 
 if (WIN32)

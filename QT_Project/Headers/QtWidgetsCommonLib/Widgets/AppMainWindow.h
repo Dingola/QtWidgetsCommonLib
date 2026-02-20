@@ -2,6 +2,8 @@
 
 #include <QMainWindow>
 
+#include "QtWidgetsCommonLib/ApiMacro.h"
+
 namespace QtWidgetsCommonLib
 {
 class IUiPreferences;
@@ -14,7 +16,7 @@ class Translator;
  *
  * This class provides basic functionality for managing application settings and stylesheets.
  */
-class AppMainWindow: public QMainWindow
+class QTWIDGETSCOMMONLIB_API AppMainWindow: public QMainWindow
 {
         Q_OBJECT
 
