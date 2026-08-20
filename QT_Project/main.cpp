@@ -5,16 +5,16 @@
 
 #include <QApplication>
 
-// GCOVR_EXCL_START  LCOV_EXCL_START
+ // GCOVR_EXCL_START  LCOV_EXCL_START
 
-/**
- * @brief The main function initializes the Qt application and executes the application event loop.
- *
- * @param argc The number of command-line arguments.
- * @param argv The command-line arguments.
- *
- * @return The exit code of the application.
- */
+ /**
+  * @brief The main function initializes the Qt application and executes the application event loop.
+  *
+  * @param argc The number of command-line arguments.
+  * @param argv The command-line arguments.
+  *
+  * @return The exit code of the application.
+  */
 auto main(int argc, char* argv[]) -> int
 {
     // This line ensures that the resources are included in the final application binary when using
@@ -24,8 +24,9 @@ auto main(int argc, char* argv[]) -> int
     QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     QApplication app(argc, argv);
-    app.setApplicationName(QStringLiteral("QtWidgetsApp"));
-    app.setOrganizationName(QStringLiteral("QtWidgetsTemplate"));
+    app.setApplicationName(QStringLiteral("QtWidgetsCommonLib"));
+    app.setApplicationDisplayName(QStringLiteral("QtWidgetsCommonLib"));
+    app.setOrganizationName(QStringLiteral("Dingola"));
     app.setOrganizationDomain(QStringLiteral("AdrianHelbig.de"));
 
     // TODO: Add your main window or application logic here

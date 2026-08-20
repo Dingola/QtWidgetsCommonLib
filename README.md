@@ -1,4 +1,4 @@
-# Qt Widgets Common Lib
+# QtWidgetsCommonLib
 
 ## 🚀 [Build Status]
 
@@ -30,6 +30,7 @@
   - [4) Run the project](#4-run-the-project)
   - [5) Deployment](#5-deployment)
   - [6) Using Docker](#6-using-docker)
+- [Creating Releases](#creating-releases)
 - [Translations](#translations)
 - [Code Style and Linting](#code-style-and-linting)
 
@@ -41,9 +42,9 @@ of **Qt Widget-based desktop applications**. It serves as a shared toolkit conta
 utilities, and custom UI components that are essential for modern desktop interfaces.
 
 The solution is divided into two parts: the main project and a test project. By default, only the
-main project is built. The test project can be built if desired, controlled by a CMake 
-boolean variable `<PROJECT_NAME>_BUILD_TEST_PROJECT`. Additionally, the CMake variable 
-`<PROJECT_NAME>_BUILD_TARGET_TYPE` must be set to `static_library` for the test project 
+main project is built. The test project can be built if desired, controlled by a CMake
+boolean variable `<PROJECT_NAME>_BUILD_TEST_PROJECT`. Additionally, the CMake variable
+`<PROJECT_NAME>_BUILD_TARGET_TYPE` must be set to `static_library` for the test project
 to be executed.
 
 The project configuration supports documentation generation with Doxygen and includes GitHub
@@ -243,10 +244,10 @@ cmake --build . --config Release
 <br>
 
 ### 4) Run the project
-```
-cd QtWidgetsCommonLib/Release/
-./QtWidgetsCommonLib.exe
-```
+
+This project builds a library and therefore does not produce a directly runnable
+application. Link the generated library from a consumer target or run its test target.
+
 <br>
 
 ---
@@ -288,10 +289,7 @@ docker run -it qtwidgetscommonlib-dockerimage bash
 <br>
 
 #### 3. Run the App or Tests in the Container
-- **Start the app (virtual display with Xvfb):**
-```
-Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp & export DISPLAY=:99 && ./_build_app_release/QT_Project/QtWidgetsCommonLib
-```
+
 - **Run the tests (virtual display with Xvfb):**
 ```
 Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp & export DISPLAY=:99 && ./_build_tests_release/QT_Project_Tests/QtWidgetsCommonLib_Tests
@@ -307,16 +305,13 @@ Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp & export DISPLAY=:99 && ./_build_t
    - Alternatively, use the preconfigured `config.xlaunch` file located in the `Configs` folder of this project. Double-click the file to launch VcXsrv with the correct settings.
 3. Start the Docker container:
 ```
-docker run -it --name QtWidgetsCommonLib-Container --network host -e DISPLAY=<IP-ADDRESS>:99.0 -e TERM=xterm-256color -e QT_X11_NO_MITSHM=1 QtWidgetsCommonLib-DockerImage bash
+docker run -it --name qtwidgetscommonlib-container --network host -e DISPLAY=<IP-ADDRESS>:99.0 -e TERM=xterm-256color -e QT_X11_NO_MITSHM=1 qtwidgetscommonlib-dockerimage bash
 ```
 > [!NOTE]
 > Replace `<IP-ADDRESS>` with the host's IP address (e.g., `192.168.1.2`). Do not use `127.0.0.1` or `localhost`.
 
 4. Inside the container:
-- **Start the app:**
-```
-"./_build_app_release/QT_Project/QtWidgetsCommonLib"
-```
+
 - **Run the tests:**
 ```
 "./_build_tests_release/QT_Project_Tests/QtWidgetsCommonLib_Tests"
@@ -339,6 +334,62 @@ export DISPLAY=192.168.1.2:99.0
 - Ensure the firewall on the host allows connections to the X11 server (VcXsrv).
 - If the GUI does not display, check the `DISPLAY` variable and the VcXsrv logs.
 <br><br><br>
+
+## Creating Releases
+
+The repository includes a release workflow for Windows, Linux, and macOS. It starts
+when a semantic version tag is pushed:
+
+```text
+v1.0.0
+v1.1.0
+v2.0.0-beta.1
+```
+
+Create and push a stable release tag:
+
+```powershell
+git status
+```
+
+```powershell
+git tag -a v1.0.0 -m "Release v1.0.0"
+```
+
+```powershell
+git push origin v1.0.0
+```
+
+The Git working tree should be clean and the tagged commit should already have passed
+the normal build-and-test workflows.
+
+The release workflow creates a draft, tests the tagged revision, and builds all native
+packages. Assets are uploaded directly to the GitHub Release without using GitHub
+Actions artifact storage. The release is published only after all platform jobs
+succeed. If a job fails, the draft remains available for inspection.
+
+
+The workflow creates:
+
+- `QtWidgetsCommonLib-<VERSION>-windows-x64-sdk.zip`
+- `QtWidgetsCommonLib-<VERSION>-linux-x86_64-sdk.tar.gz`
+- `QtWidgetsCommonLib-<VERSION>-macos-<ARCH>-sdk.tar.gz`
+- `SHA256SUMS.txt`
+
+SDK archives contain installed public headers, libraries, and CMake package files.
+
+
+The tag supplies the version to CMake as `MAIN_PROJECT_VERSION`. CMake then populates
+`PROJECT_VERSION`, its major/minor/patch components, the configured `Config.h`, library
+metadata, package configuration, installer metadata, and release filenames.
+
+Pre-release tags containing a suffix, such as `v2.0.0-beta.1`, are published as GitHub
+pre-releases.
+
+The workflow requires `contents: write` for its repository-scoped `GITHUB_TOKEN`. No
+personal access token is required. Unsigned Windows and macOS packages may trigger
+operating-system security warnings; code signing and Apple notarization can be added
+later with repository secrets.
 
 ## [Translations]
 The project includes custom targets for updating and compiling translation files. These targets are defined in the CMake file located in `QtWidgetsCommonLib/QT_Project` and can be used to manage translation files located in the `QtWidgetsCommonLib/QT_Project/resources/Translations` directory.
