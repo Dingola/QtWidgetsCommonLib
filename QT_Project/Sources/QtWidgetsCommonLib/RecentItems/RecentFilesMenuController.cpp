@@ -5,6 +5,7 @@
 
 #include "QtWidgetsCommonLib/RecentItems/RecentFilesMenuController.h"
 
+#include <QAction>
 #include <QFileInfo>
 #include <QMenu>
 #include <QVector>
@@ -50,12 +51,18 @@ RecentFilesMenuController::RecentFilesMenuController(QMenu* menu, QObject* paren
         to_role_id(RecentItemRole::Enabled), to_role_id(RecentItemRole::ToolTip),
         to_role_id(RecentItemRole::Icon),    to_role_id(RecentItemRole::StatusText)};
     m_binder = new RecentItemsMenuBinder(menu, m_model, roles, this);
+    m_remove_unavailable_action = new QAction(this);
+    m_binder->set_footer_actions({m_remove_unavailable_action});
+    connect(m_remove_unavailable_action, &QAction::triggered, this,
+            &RecentFilesMenuController::remove_unavailable_requested);
     connect(m_binder, &RecentItemsMenuBinder::item_activated, this,
             [this](const QVariant& identity) { emit file_activated(identity.toString()); });
     connect(m_binder, &RecentItemsMenuBinder::clear_requested, this,
             &RecentFilesMenuController::clear_requested);
     connect(m_binder, &RecentItemsMenuBinder::contains_disabled_items_changed, this,
             &RecentFilesMenuController::contains_unavailable_files_changed);
+    connect(m_binder, &RecentItemsMenuBinder::contains_disabled_items_changed,
+            m_remove_unavailable_action, &QAction::setEnabled);
 }
 
 /**
@@ -78,6 +85,8 @@ auto RecentFilesMenuController::set_texts(RecentFilesMenuTexts texts) -> void
     m_binder->set_empty_text(m_texts.empty_text);
     m_binder->set_clear_text(m_texts.clear_text);
     m_binder->set_disabled_text_format(m_texts.disabled_text_format);
+    m_remove_unavailable_action->setText(m_texts.remove_unavailable_text);
+    m_remove_unavailable_action->setVisible(!m_texts.remove_unavailable_text.isEmpty());
     rebuild_presentations();
 }
 

@@ -25,6 +25,7 @@ namespace
     QtWidgetsCommonLib::RecentFilesMenuTexts result;
     result.empty_text = QStringLiteral("No recent files");
     result.clear_text = QStringLiteral("Clear list");
+    result.remove_unavailable_text = QStringLiteral("Remove unavailable");
     result.disabled_text_format = QStringLiteral("%1 — %2");
     result.available_status_text = QStringLiteral("Available");
     result.missing_status_text = QStringLiteral("Missing");
@@ -77,25 +78,32 @@ TEST_F(RecentFilesMenuControllerTest, ProvidesStandardRecentFilesMenuIntegration
                              &QtWidgetsCommonLib::RecentFilesMenuController::file_activated);
     QSignalSpy clear_spy(&controller,
                          &QtWidgetsCommonLib::RecentFilesMenuController::clear_requested);
+    QSignalSpy remove_unavailable_spy(
+        &controller, &QtWidgetsCommonLib::RecentFilesMenuController::remove_unavailable_requested);
 
     controller.set_files({available_path, missing_path});
 
     QAction* available_action = find_action(menu, QStringLiteral("available.log"));
     QAction* missing_action = find_action(menu, QStringLiteral("missing.log — Missing"));
     QAction* clear_action = find_action(menu, QStringLiteral("Clear list"));
+    QAction* remove_unavailable_action = find_action(menu, QStringLiteral("Remove unavailable"));
     ASSERT_NE(available_action, nullptr);
     ASSERT_NE(missing_action, nullptr);
     ASSERT_NE(clear_action, nullptr);
+    ASSERT_NE(remove_unavailable_action, nullptr);
     EXPECT_TRUE(available_action->isEnabled());
     EXPECT_FALSE(missing_action->isEnabled());
+    EXPECT_TRUE(remove_unavailable_action->isEnabled());
     EXPECT_EQ(controller.model()->rowCount(), 2);
 
     available_action->trigger();
     clear_action->trigger();
+    remove_unavailable_action->trigger();
 
     ASSERT_EQ(activated_spy.count(), 1);
     EXPECT_EQ(activated_spy.front().front().toString(), available_path);
     EXPECT_EQ(clear_spy.count(), 1);
+    EXPECT_EQ(remove_unavailable_spy.count(), 1);
 }
 
 /**
@@ -137,7 +145,7 @@ TEST_F(RecentFilesMenuControllerTest, AppliesEmptyAndLimitConfiguration)
     controller.set_files({QStringLiteral("first.log"), QStringLiteral("second.log")});
 
     EXPECT_EQ(controller.model()->rowCount(), 2);
-    EXPECT_EQ(menu.actions().size(), 3);
+    EXPECT_EQ(menu.actions().size(), 4);
 
     controller.set_files({});
 

@@ -9,6 +9,7 @@
 
 class QMenu;
 class QAbstractItemModel;
+class QAction;
 
 namespace QtCommonLib
 {
@@ -33,6 +34,7 @@ struct RecentItemPresentation;
 struct QTWIDGETSCOMMONLIB_API RecentFilesMenuTexts {
         QString empty_text;                   ///< Disabled action shown for an empty list.
         QString clear_text;                   ///< Optional action requesting list clearing.
+        QString remove_unavailable_text;      ///< Optional action requesting unavailable cleanup.
         QString disabled_text_format;         ///< Optional `%1` title and `%2` status format.
         QString available_status_text;        ///< Status text for an available file.
         QString missing_status_text;          ///< Status text for a missing file.
@@ -106,6 +108,9 @@ class QTWIDGETSCOMMONLIB_API RecentFilesMenuController final: public QObject
         /** @brief Requests clearing recent-file metadata in the host application. */
         void clear_requested();
 
+        /** @brief Requests removal of unavailable recent-file metadata by the host. */
+        void remove_unavailable_requested();
+
         /**
          * @brief Reports whether the represented list currently contains unavailable files.
          * @param contains_unavailable_files True when at least one file is unavailable.
@@ -131,6 +136,7 @@ class QTWIDGETSCOMMONLIB_API RecentFilesMenuController final: public QObject
     private:
         RecentItemsModel* m_model{nullptr};
         RecentItemsMenuBinder* m_binder{nullptr};
+        QAction* m_remove_unavailable_action{nullptr};
         QStringList m_file_paths;
         RecentFilesMenuTexts m_texts;
         QIcon m_file_icon;

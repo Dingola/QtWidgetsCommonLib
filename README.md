@@ -49,6 +49,28 @@ to be executed.
 
 The project configuration supports documentation generation with Doxygen and includes GitHub
 workflows (CI builds) for Mac, Linux and Windows.
+
+### Recent-files menu integration
+
+The installed package provides a high-level recent-files menu facade. Consumers own persistence
+and file opening; the facade owns file-status inspection, presentation data, and generated menu
+actions.
+
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(QtWidgetsCommonLib CONFIG REQUIRED)
+
+target_link_libraries(my_app PRIVATE Qt6::Widgets QtWidgetsCommonLib::QtWidgetsCommonLib)
+```
+
+Include `QtWidgetsCommonLib/RecentItems/RecentFilesMenuController.h`, construct the controller with
+the target `QMenu`, inject translated `RecentFilesMenuTexts`, and connect `file_activated` and
+`clear_requested` to the application's workflows. The owned model returned by `model()` can also
+be assigned to a `QListView`. The host never needs to create recent-file `QAction` objects or react
+to model reset signals.
+
+`Examples/RecentFilesMenu` is an independent installed-package consumer. Configure it with a
+`CMAKE_PREFIX_PATH` containing the Qt, QtCommonLib, and QtWidgetsCommonLib installation prefixes.
 <br><br>
 
 ## 📊 [Code Coverage Graphs]
