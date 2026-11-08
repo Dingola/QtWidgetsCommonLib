@@ -216,6 +216,7 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets Qt6::Svg)
+include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/QtCommonLib.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/Doxygen.cmake)
 
 if (WIN32)
