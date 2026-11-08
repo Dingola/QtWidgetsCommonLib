@@ -3,7 +3,7 @@
  * @brief Tests model synchronization and semantic signals of the recent-items menu binder.
  */
 
-#include "QtWidgetsCommonLib/ItemViews/RecentItemsMenuBinderTest.h"
+#include "QtWidgetsCommonLib/RecentItems/RecentItemsMenuBinderTest.h"
 
 #include <QAction>
 #include <QMenu>
@@ -11,7 +11,7 @@
 #include <QStandardItem>
 #include <QStandardItemModel>
 
-#include "QtWidgetsCommonLib/ItemViews/RecentItemsMenuBinder.h"
+#include "QtWidgetsCommonLib/RecentItems/RecentItemsMenuBinder.h"
 
 namespace
 {

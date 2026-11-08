@@ -3,7 +3,7 @@
  * @brief Implements the reusable recent-items menu binding.
  */
 
-#include "QtWidgetsCommonLib/ItemViews/RecentItemsMenuBinder.h"
+#include "QtWidgetsCommonLib/RecentItems/RecentItemsMenuBinder.h"
 
 #include <QAbstractItemModel>
 #include <QAction>

@@ -3,7 +3,7 @@
  * @brief Implements a configurable two-line item delegate.
  */
 
-#include "QtWidgetsCommonLib/ItemViews/TwoLineItemDelegate.h"
+#include "QtWidgetsCommonLib/ItemViews/Delegates/TwoLineItemDelegate.h"
 
 #include <QApplication>
 #include <QFontMetrics>

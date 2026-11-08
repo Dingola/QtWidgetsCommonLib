@@ -3,7 +3,7 @@
  * @brief Tests configurable sizing and rendering of the two-line item delegate.
  */
 
-#include "QtWidgetsCommonLib/ItemViews/TwoLineItemDelegateTest.h"
+#include "QtWidgetsCommonLib/ItemViews/Delegates/TwoLineItemDelegateTest.h"
 
 #include <QImage>
 #include <QPainter>
@@ -11,7 +11,7 @@
 #include <QStandardItemModel>
 #include <QStyleOptionViewItem>
 
-#include "QtWidgetsCommonLib/ItemViews/TwoLineItemDelegate.h"
+#include "QtWidgetsCommonLib/ItemViews/Delegates/TwoLineItemDelegate.h"
 
 namespace
 {
