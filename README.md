@@ -71,6 +71,35 @@ to model reset signals.
 
 `Examples/RecentFilesMenu` is an independent installed-package consumer. Configure it with a
 `CMAKE_PREFIX_PATH` containing the Qt, QtCommonLib, and QtWidgetsCommonLib installation prefixes.
+
+### Snapshot transitions
+
+`QtWidgetsCommonLib/Animations/SnapshotTransitionAnimator.h` animates a synchronous visual state
+change on any visible `QWidget` surface. The host owns the widget and supplies the state-changing
+callback; the animator owns only temporary snapshot overlays. Hidden surfaces and zero-duration
+configurations apply the callback immediately.
+
+`QtWidgetsCommonLib/Animations/StackedWidgetTransition.h` adapts the same mechanism to a
+`QStackedWidget`. It selects target pages but does not own the stack, its pages, or an optional
+larger presentation surface. Both classes support crossfade, slide, and combined fade-and-slide
+effects through `WidgetTransitionConfiguration`.
+
+```cpp
+#include <QStackedWidget>
+
+#include "QtWidgetsCommonLib/Animations/StackedWidgetTransition.h"
+
+QtWidgetsCommonLib::StackedWidgetTransition transition(&stack);
+QtWidgetsCommonLib::WidgetTransitionConfiguration configuration;
+configuration.effect = QtWidgetsCommonLib::WidgetTransitionEffect::CrossFade;
+configuration.duration_ms = 200;
+transition.set_configuration(configuration);
+transition.transition_to(1);
+```
+
+The focused `SnapshotTransitionAnimatorTest` and `StackedWidgetTransitionTest` suites cover effect
+selection, direction, easing, duration, explicit completion, immediately following transitions,
+hidden or destroyed surfaces, and stacked-widget page activation.
 <br><br>
 
 ## 📊 [Code Coverage Graphs]
